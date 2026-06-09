@@ -1,55 +1,99 @@
 const micBtn = document.getElementById('mic');
 const statusEl = document.getElementById('status');
-const logEl = document.getElementById('log');
+const feedEl = document.getElementById('log');
+const emptyEl = document.getElementById('empty');
+const countEl = document.getElementById('count');
 const textForm = document.getElementById('textForm');
 const textInput = document.getElementById('textInput');
 
 let mediaRecorder = null;
 let chunks = [];
 let stream = null;
+let entryCount = 0;
 
-function setStatus(msg) {
+// 分類對應的 emoji
+const CAT_ICON = {
+  餐飲: '🍜', 交通: '🚇', 購物: '🛍️', 娛樂: '🎮',
+  居家: '🏠', 醫療: '💊', 其他: '📌',
+};
+
+function setStatus(msg, state) {
   statusEl.textContent = msg;
+  if (state) statusEl.setAttribute('data-state', state);
+  else statusEl.removeAttribute('data-state');
 }
 
-// 把記帳結果加進畫面清單
-function addLog(result, isError = false) {
+function escapeHtml(s = '') {
+  return s.replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function updateCount() {
+  countEl.textContent = `${entryCount} 筆`;
+  emptyEl.classList.toggle('hide', entryCount > 0);
+}
+
+// 把一筆辨識結果加進畫面:清楚顯示 時間 / 品項 / 金額 / 分類
+function addEntry(result) {
+  const { transcript, data } = result;
+  const icon = CAT_ICON[data.category] || '📌';
+  const amount = Number(data.amount).toLocaleString('zh-TW');
+
   const li = document.createElement('li');
-  if (isError) {
-    li.className = 'error';
-    li.textContent = `⚠️ ${result}`;
-  } else {
-    const { transcript, data } = result;
-    li.innerHTML = `
-      <div class="row-main">
-        <span>${data.item}</span>
-        <span class="amount">$${data.amount}</span>
+  li.className = 'entry';
+  li.innerHTML = `
+    <div class="entry__cat">${icon}</div>
+    <div class="entry__body">
+      <div class="entry__top">
+        <span class="entry__item">${escapeHtml(data.item)}</span>
+        <span class="entry__amount"><span class="cur">$</span>${amount}</span>
       </div>
-      <div class="meta">${data.date}・${data.category}${data.note ? '・' + data.note : ''}</div>
-      <div class="meta">🗣️ ${transcript}</div>
-    `;
-  }
-  logEl.prepend(li);
+      <div class="entry__meta">
+        <span>${escapeHtml(data.date)}</span>
+        <span class="entry__tag">${escapeHtml(data.category)}</span>
+        ${data.note ? `<span>${escapeHtml(data.note)}</span>` : ''}
+      </div>
+      <div class="entry__transcript">🗣️ ${escapeHtml(transcript)}</div>
+    </div>
+  `;
+  feedEl.prepend(li);
+  entryCount += 1;
+  updateCount();
+}
+
+function addError(message) {
+  const li = document.createElement('li');
+  li.className = 'entry error';
+  li.innerHTML = `
+    <div class="entry__cat">⚠️</div>
+    <div class="entry__body">
+      <div class="entry__top"><span class="entry__item">記帳失敗</span></div>
+      <div class="entry__transcript">${escapeHtml(message)}</div>
+    </div>
+  `;
+  feedEl.prepend(li);
+  emptyEl.classList.add('hide');
 }
 
 async function sendAudio(blob) {
-  setStatus('辨識中…');
+  setStatus('辨識中…', 'busy');
   const form = new FormData();
   form.append('audio', blob, 'recording.webm');
   try {
     const res = await fetch('/api/record', { method: 'POST', body: form });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || '伺服器錯誤');
-    addLog(json);
-    setStatus('✅ 已記帳');
+    addEntry(json);
+    setStatus('✓ 已記帳', 'ok');
   } catch (err) {
-    addLog(err.message, true);
-    setStatus('❌ 失敗');
+    addError(err.message);
+    setStatus('辨識失敗，請再試一次', 'err');
   }
 }
 
 async function sendText(text) {
-  setStatus('處理中…');
+  setStatus('處理中…', 'busy');
   try {
     const res = await fetch('/api/text', {
       method: 'POST',
@@ -58,11 +102,11 @@ async function sendText(text) {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || '伺服器錯誤');
-    addLog(json);
-    setStatus('✅ 已記帳');
+    addEntry(json);
+    setStatus('✓ 已記帳', 'ok');
   } catch (err) {
-    addLog(err.message, true);
-    setStatus('❌ 失敗');
+    addError(err.message);
+    setStatus('記帳失敗，請再試一次', 'err');
   }
 }
 
@@ -71,7 +115,7 @@ async function startRecording() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch {
-    setStatus('❌ 無法存取麥克風,請允許權限');
+    setStatus('無法存取麥克風，請允許權限', 'err');
     return;
   }
   chunks = [];
@@ -86,14 +130,17 @@ async function startRecording() {
   };
   mediaRecorder.start();
   micBtn.classList.add('recording');
-  setStatus('🔴 錄音中…放開結束');
+  setStatus('● 錄音中…放開結束', 'rec');
 }
 
 function stopRecording() {
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     mediaRecorder.stop();
   }
-  micBtn.classList.remove('recording');
+  if (micBtn.classList.contains('recording')) {
+    micBtn.classList.remove('recording');
+    setStatus('辨識中…', 'busy');
+  }
 }
 
 // 按住錄音(滑鼠 + 觸控)
@@ -103,7 +150,7 @@ micBtn.addEventListener('mouseleave', stopRecording);
 micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
 micBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
 
-// 文字輸入
+// 手動輸入
 textForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const text = textInput.value.trim();

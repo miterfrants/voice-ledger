@@ -3,27 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <meta name="theme-color" content="#0f172a" />
-  <title>語音記帳</title>
+  <meta name="theme-color" content="#f3efe6" />
+  <title>語音記帳 · Voice Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..500&family=Manrope:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="app">
-    <h1>🎙️ 語音記帳</h1>
-    <p class="hint">按住按鈕說話,放開就自動記帳</p>
+  <div class="grain" aria-hidden="true"></div>
 
-    <button id="mic" class="mic" aria-label="按住錄音">
-      <span class="mic-icon">🎤</span>
-    </button>
-    <div id="status" class="status">準備就緒</div>
+  <div class="layout">
+    <!-- ── 左:錄音區 ── -->
+    <section class="stage">
+      <header class="brand">
+        <span class="brand__mark">◖</span>
+        <span class="brand__word">VOICE·LEDGER</span>
+      </header>
 
-    <form id="textForm" class="text-form">
-      <input id="textInput" type="text" placeholder="也可以直接打字,例如:午餐 120" autocomplete="off" />
-      <button type="submit">送出</button>
-    </form>
+      <div class="stage__hero">
+        <h1 class="headline">說一句，<br />就記好<em>一筆</em>。</h1>
+        <p class="subline">按住下方按鈕說話，例如「午餐買便當 120 元」，放開即自動記帳。</p>
+      </div>
 
-    <ul id="log" class="log"></ul>
-  </main>
+      <div class="recorder">
+        <div class="recorder__glow" aria-hidden="true"></div>
+        <button id="mic" class="mic" aria-label="按住錄音">
+          <span class="mic__ring"></span>
+          <span class="mic__ring"></span>
+          <span class="mic__ring"></span>
+          <span class="mic__core">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="2" width="6" height="12" rx="3" />
+              <path d="M5 11a7 7 0 0 0 14 0" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="8" y1="22" x2="16" y2="22" />
+            </svg>
+          </span>
+        </button>
+        <div id="status" class="status">準備就緒</div>
+      </div>
+
+      <form id="textForm" class="manual">
+        <span class="manual__hint">或手動輸入</span>
+        <div class="manual__field">
+          <input id="textInput" type="text" placeholder="例如：午餐 120" autocomplete="off" />
+          <button type="submit" aria-label="送出">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ── 右:紀錄區 ── -->
+    <section class="ledger">
+      <div class="ledger__head">
+        <h2>最近紀錄</h2>
+        <span id="count" class="ledger__count">0 筆</span>
+      </div>
+      <ul id="log" class="feed"></ul>
+      <div id="empty" class="empty">
+        <div class="empty__icon">🪙</div>
+        <p>還沒有紀錄<br /><span>說一筆來開始吧</span></p>
+      </div>
+    </section>
+  </div>
 
   <script src="app.js"></script>
 </body>

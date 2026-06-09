@@ -1,113 +1,350 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* ============================================================
+   Voice Ledger — warm editorial finance
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0f172a;
-  --card: #1e293b;
-  --accent: #38bdf8;
-  --accent-rec: #f43f5e;
-  --text: #e2e8f0;
-  --muted: #94a3b8;
+  --paper:      #f3efe6;
+  --paper-tint: #ece6d8;
+  --card:       #fbf9f3;
+  --ink:        #211d17;
+  --ink-soft:   #7c7363;
+  --line:       #e2dbcc;
+  --accent:     #d8442b;  /* 陶土紅 */
+  --accent-deep:#b3331d;
+  --money:      #1f7a52;  /* 金額深綠 */
+  --radius:     22px;
+  --shadow-sm:  0 2px 10px rgba(33, 29, 23, 0.05);
+  --shadow-md:  0 18px 50px -24px rgba(33, 29, 23, 0.45);
+  --font-disp:  "Fraunces", "Noto Serif TC", Georgia, serif;
+  --font-body:  "Manrope", "Noto Sans TC", system-ui, sans-serif;
 }
+
+html { -webkit-text-size-adjust: 100%; }
 
 body {
-  font-family: -apple-system, "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  padding: 24px 16px;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(1100px 700px at 12% -8%, #fbf7ee 0%, transparent 55%),
+    radial-gradient(900px 600px at 108% 110%, #efe7d4 0%, transparent 50%),
+    var(--paper);
+  min-height: 100svh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.app {
-  width: 100%;
-  max-width: 480px;
+/* 顆粒質感覆蓋層 */
+.grain {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0.04; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Layout ───────────────────────────────────────────────── */
+.layout {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 0;
+  max-width: 1240px;
+  min-height: 100svh;
+  margin: 0 auto;
+}
+
+/* ── 左:錄音舞台 ─────────────────────────────────────────── */
+.stage {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(28px, 5vw, 64px);
+  gap: clamp(22px, 4vh, 40px);
+}
+
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 600; font-size: 0.78rem; letter-spacing: 0.22em;
+  color: var(--ink-soft);
+}
+.brand__mark { color: var(--accent); font-size: 1.1rem; line-height: 1; }
+
+.stage__hero { margin-top: auto; }
+.headline {
+  font-family: var(--font-disp);
+  font-weight: 500;
+  font-size: clamp(2.4rem, 6vw, 3.7rem);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+}
+.headline em {
+  font-style: italic;
+  color: var(--accent);
+  position: relative;
+}
+.subline {
+  margin-top: 16px;
+  max-width: 30ch;
+  color: var(--ink-soft);
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+/* ── 麥克風 orb ───────────────────────────────────────────── */
+.recorder {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
+  padding: clamp(10px, 3vh, 26px) 0;
 }
-
-h1 { font-size: 1.6rem; }
-.hint { color: var(--muted); font-size: 0.9rem; }
+.recorder__glow {
+  position: absolute; top: 50%; left: 50%;
+  width: 360px; height: 360px;
+  transform: translate(-50%, -58%);
+  background: radial-gradient(circle, rgba(216,68,43,0.16) 0%, transparent 62%);
+  filter: blur(8px);
+  opacity: 0; transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+.mic.recording ~ .status,
+.recorder:has(.recording) .recorder__glow { opacity: 1; }
 
 .mic {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
+  position: relative;
+  width: clamp(168px, 30vw, 220px);
+  height: clamp(168px, 30vw, 220px);
   border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 3rem;
+  border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.1s, background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 8px 30px rgba(56, 189, 248, 0.35);
-  -webkit-user-select: none;
-  user-select: none;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(120% 120% at 30% 22%, #4a423a 0%, #2a241e 48%, #19140f 100%);
+  box-shadow:
+    var(--shadow-md),
+    inset 0 2px 1px rgba(255,255,255,0.16),
+    inset 0 -10px 24px rgba(0,0,0,0.5);
+  -webkit-user-select: none; user-select: none;
   touch-action: none;
+  transition: transform 0.18s cubic-bezier(.2,.9,.3,1.2), box-shadow 0.3s ease, background 0.4s ease;
 }
-.mic:active { transform: scale(0.95); }
+.mic:hover { transform: translateY(-3px) scale(1.015); }
+.mic:active { transform: scale(0.96); }
+
+.mic__core {
+  position: relative; z-index: 2;
+  display: grid; place-items: center;
+  color: #f3efe6;
+}
+.mic__core svg { width: clamp(48px, 9vw, 64px); height: clamp(48px, 9vw, 64px); }
+
+/* 錄音狀態 */
 .mic.recording {
-  background: var(--accent-rec);
-  box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6);
-  animation: pulse 1.2s infinite;
+  background: radial-gradient(120% 120% at 30% 22%, #ef6a4f 0%, var(--accent) 50%, var(--accent-deep) 100%);
+  box-shadow:
+    0 18px 50px -18px rgba(216,68,43,0.7),
+    inset 0 2px 1px rgba(255,255,255,0.3),
+    inset 0 -10px 24px rgba(120,20,8,0.5);
 }
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6); }
-  70% { box-shadow: 0 0 0 22px rgba(244, 63, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+.mic.recording .mic__core { color: #fff; }
+.mic.recording .mic__core svg { animation: micbob 1s ease-in-out infinite; }
+@keyframes micbob { 50% { transform: scale(1.08); } }
+
+/* 漣漪 */
+.mic__ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.mic.recording .mic__ring { animation: ripple 2.1s ease-out infinite; }
+.mic.recording .mic__ring:nth-child(2) { animation-delay: 0.7s; }
+.mic.recording .mic__ring:nth-child(3) { animation-delay: 1.4s; }
+@keyframes ripple {
+  0%   { opacity: 0.55; transform: scale(1); }
+  100% { opacity: 0;    transform: scale(1.9); }
 }
 
 .status {
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
   min-height: 1.4em;
-  color: var(--muted);
-  font-size: 0.95rem;
   text-align: center;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.25s ease;
 }
+.status[data-state="rec"]  { color: var(--accent); font-weight: 600; }
+.status[data-state="ok"]   { color: var(--money); font-weight: 600; }
+.status[data-state="busy"] { color: var(--ink); }
+.status[data-state="err"]  { color: var(--accent-deep); font-weight: 600; }
 
-.text-form {
-  display: flex;
-  gap: 8px;
-  width: 100%;
+/* ── 手動輸入 ─────────────────────────────────────────────── */
+.manual { margin-top: auto; }
+.manual__hint {
+  display: block; margin-bottom: 10px;
+  font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-soft);
 }
-.text-form input {
-  flex: 1;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #334155;
+.manual__field {
+  display: flex; align-items: center; gap: 8px;
   background: var(--card);
-  color: var(--text);
-  font-size: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 6px 6px 6px 18px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.text-form button {
-  padding: 0 18px;
-  border-radius: 10px;
-  border: none;
-  background: var(--accent);
-  color: #04293a;
-  font-weight: 600;
-  cursor: pointer;
+.manual__field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(216,68,43,0.1);
+}
+.manual__field input {
+  flex: 1; border: none; background: none; outline: none;
+  font-family: var(--font-body); font-size: 1rem; color: var(--ink);
+}
+.manual__field input::placeholder { color: #b3aa97; }
+.manual__field button {
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  border: none; border-radius: 12px;
+  background: var(--ink); color: var(--paper);
+  display: grid; place-items: center; cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.manual__field button:hover { background: var(--accent); }
+.manual__field button:active { transform: scale(0.92); }
+.manual__field button svg { width: 19px; height: 19px; }
+
+/* ── 右:紀錄 ─────────────────────────────────────────────── */
+.ledger {
+  position: relative;
+  display: flex; flex-direction: column;
+  padding: clamp(28px, 5vw, 64px) clamp(28px, 5vw, 56px);
+  background: linear-gradient(180deg, rgba(251,249,243,0.65), rgba(251,249,243,0.3));
+  border-left: 1px solid var(--line);
+  min-height: 0;
+}
+.ledger__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding-bottom: 18px; margin-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.ledger__head h2 {
+  font-family: var(--font-disp); font-weight: 500;
+  font-size: 1.5rem; letter-spacing: -0.01em;
+}
+.ledger__count {
+  font-size: 0.82rem; color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 
-.log {
+.feed {
   list-style: none;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
+  display: flex; flex-direction: column; gap: 12px;
+  margin-top: 18px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+  scrollbar-width: thin;
 }
-.log li {
+
+/* 紀錄卡片 */
+.entry {
+  display: flex; gap: 14px; align-items: flex-start;
   background: var(--card);
-  border-radius: 12px;
-  padding: 12px 14px;
-  border-left: 4px solid var(--accent);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  animation: pop 0.4s cubic-bezier(.2,.9,.3,1.1) both;
 }
-.log li.error { border-left-color: var(--accent-rec); }
-.log .row-main {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 600;
+@keyframes pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
 }
-.log .amount { color: var(--accent); }
-.log .meta { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+.entry.error { border-color: rgba(216,68,43,0.4); background: #fdf1ee; }
+
+.entry__cat {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  font-size: 1.35rem;
+  border-radius: 13px;
+  background: var(--paper-tint);
+}
+.entry__body { flex: 1; min-width: 0; }
+.entry__top {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+}
+.entry__item {
+  font-weight: 600; font-size: 1.04rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.entry__amount {
+  flex-shrink: 0;
+  font-family: var(--font-disp); font-weight: 500;
+  font-size: 1.3rem; color: var(--money);
+  font-variant-numeric: tabular-nums;
+}
+.entry__amount .cur { font-size: 0.82em; opacity: 0.7; margin-right: 1px; }
+.entry__meta {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 5px;
+  font-size: 0.82rem; color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.entry__tag {
+  padding: 1px 9px; border-radius: 999px;
+  background: var(--paper-tint); color: #8a8170;
+  font-size: 0.74rem; letter-spacing: 0.02em;
+}
+.entry__transcript {
+  margin-top: 9px;
+  font-size: 0.82rem; color: #9a917f; font-style: italic;
+  line-height: 1.5;
+}
+.entry.error .entry__transcript { color: var(--accent-deep); font-style: normal; }
+
+/* 空狀態 */
+.empty {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; text-align: center; color: var(--ink-soft);
+}
+.empty.hide { display: none; }
+.empty__icon {
+  font-size: 2.6rem;
+  filter: grayscale(0.2);
+  animation: float 3.5s ease-in-out infinite;
+}
+@keyframes float { 50% { transform: translateY(-8px); } }
+.empty p { line-height: 1.7; font-size: 0.95rem; }
+.empty p span { font-size: 0.82rem; opacity: 0.7; }
+
+/* ── RWD ──────────────────────────────────────────────────── */
+@media (max-width: 920px) {
+  .layout { grid-template-columns: 1fr; min-height: auto; }
+  .stage {
+    min-height: 100svh;
+    justify-content: space-between;
+    padding-bottom: clamp(32px, 6vh, 48px);
+  }
+  .stage__hero { margin-top: 8px; }
+  .ledger {
+    border-left: none;
+    border-top: 1px solid var(--line);
+    min-height: 70svh;
+  }
+  .feed { overflow-y: visible; }
+}
+
+@media (max-width: 480px) {
+  .headline { font-size: clamp(2.1rem, 9vw, 2.8rem); }
+  .recorder { gap: 18px; }
+  .entry__cat { width: 40px; height: 40px; font-size: 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
