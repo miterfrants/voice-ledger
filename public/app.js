@@ -1,10 +1,15 @@
+const loginEl = document.getElementById('login');
 const stageEl = document.getElementById('stage');
 const reviewEl = document.getElementById('review');
 const doneEl = document.getElementById('done');
 
+const loginForm = document.getElementById('loginForm');
+const emailInput = document.getElementById('email');
+const loginBtn = document.getElementById('loginBtn');
+const loginHint = document.getElementById('loginHint');
+
 const micBtn = document.getElementById('mic');
 const statusEl = document.getElementById('status');
-const promptEl = document.getElementById('prompt');
 
 const bubbleEl = document.getElementById('bubble');
 const fItem = document.getElementById('f-item');
@@ -20,22 +25,73 @@ let chunks = [];
 let stream = null;
 
 function setStatus(msg, state) {
-  statusEl.textContent = msg;
+  statusEl.textContent = msg || '';
   if (state) statusEl.setAttribute('data-state', state);
   else statusEl.removeAttribute('data-state');
 }
 
 function show(section) {
-  for (const el of [stageEl, reviewEl, doneEl]) {
+  for (const el of [loginEl, stageEl, reviewEl, doneEl]) {
     el.classList.toggle('hide', el !== section);
   }
 }
 
-// 回到麥克風起始畫面
 function resetToMic() {
   show(stageEl);
-  setStatus('準備好囉 ✨');
+  setStatus('');
 }
+
+// ── 啟動:檢查登入狀態 ─────────────────────────────────────
+async function boot() {
+  // 處理 magic link 導回的提示
+  const params = new URLSearchParams(location.search);
+  if (params.get('login') === 'expired') {
+    setLoginHint('連結已失效或用過了,請重新索取 🥲', 'err');
+  }
+  if (params.has('login')) {
+    history.replaceState(null, '', location.pathname); // 清掉網址參數
+  }
+
+  try {
+    const res = await fetch('/api/auth/me');
+    if (res.ok) {
+      resetToMic();
+    } else {
+      show(loginEl);
+    }
+  } catch {
+    show(loginEl);
+  }
+}
+
+function setLoginHint(msg, state) {
+  loginHint.textContent = msg;
+  loginHint.className = 'login__hint' + (state ? ' ' + state : '');
+}
+
+// ── 登入:寄 magic link ────────────────────────────────────
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = emailInput.value.trim();
+  if (!email) return;
+  loginBtn.disabled = true;
+  loginBtn.textContent = '寄送中…';
+  try {
+    const res = await fetch('/api/auth/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || '寄送失敗');
+    setLoginHint('信寄出囉,去收信點連結就能登入 📮', 'ok');
+  } catch (err) {
+    setLoginHint(err.message, 'err');
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = '寄送登入連結';
+  }
+});
 
 // ── 錄音 ──────────────────────────────────────────────────
 async function startRecording() {
@@ -74,6 +130,7 @@ async function sendAudio(blob) {
   form.append('audio', blob, 'recording.webm');
   try {
     const res = await fetch('/api/record', { method: 'POST', body: form });
+    if (res.status === 401) return show(loginEl);
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || '出錯了');
     fillReview(json);
@@ -82,7 +139,6 @@ async function sendAudio(blob) {
   }
 }
 
-// 把辨識結果填入確認卡片
 function fillReview({ transcript, data }) {
   bubbleEl.textContent = transcript || '';
   fItem.value = data.item || '';
@@ -110,6 +166,7 @@ async function confirmEntry() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data }),
     });
+    if (res.status === 401) return show(loginEl);
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || '寫入失敗');
     doneSub.textContent = `${data.item}　$${Number(data.amount).toLocaleString('zh-TW')}`;
@@ -132,3 +189,5 @@ micBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording()
 
 retryBtn.addEventListener('click', resetToMic);
 confirmBtn.addEventListener('click', confirmEntry);
+
+boot();

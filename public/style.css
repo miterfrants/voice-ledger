@@ -45,14 +45,8 @@ body {
   align-items: center;
 }
 
-.topbar { width: 100%; text-align: center; padding: 6px 0 8px; }
-.logo {
-  font-weight: 600; font-size: 1.15rem; letter-spacing: 0.02em;
-  color: var(--ink);
-}
-
 /* 共用:置中填滿剩餘空間 */
-.stage, .review, .done {
+.login, .stage, .review, .done {
   flex: 1;
   width: 100%;
   display: flex;
@@ -133,6 +127,33 @@ body {
 .status[data-state="rec"]  { color: var(--pink-deep); font-weight: 600; }
 .status[data-state="busy"] { color: var(--ink); }
 .status[data-state="err"]  { color: #f0648a; font-weight: 600; }
+
+/* ── 登入 ──────────────────────────────────────────────────── */
+.login__pig { font-size: 4.6rem; animation: wobble-pig 4s ease-in-out infinite; }
+@keyframes wobble-pig { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+.login__title { font-size: 1.9rem; font-weight: 700; color: var(--ink); }
+.login__hint {
+  font-size: 1rem; color: var(--ink-soft); text-align: center;
+  line-height: 1.6; max-width: 24ch; margin-top: -10px;
+}
+.login__hint.ok  { color: var(--mint-deep); font-weight: 600; }
+.login__hint.err { color: #f0648a; font-weight: 600; }
+.login__form { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.login__form input {
+  width: 100%;
+  border: 2px solid var(--line); border-radius: 18px;
+  background: var(--cream);
+  padding: 16px 20px;
+  font-family: var(--font); font-size: 1.05rem; color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.login__form input::placeholder { color: #d9c7bf; }
+.login__form input:focus {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 4px rgba(255,158,181,0.25);
+}
+.login__form .btn { width: 100%; }
 
 /* ── 確認卡片 ──────────────────────────────────────────────── */
 .bubble {

@@ -17,9 +17,11 @@
     "node": ">=20"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "googleapis": "^144.0.0",
+    "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "openai": "^4.77.0"
   }

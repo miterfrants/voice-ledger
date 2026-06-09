@@ -12,14 +12,19 @@
 </head>
 <body>
   <main class="app">
-    <header class="topbar">
-      <span class="logo">🐷 語音記帳</span>
-    </header>
+    <!-- ── 登入(magic link)── -->
+    <section class="login hide" id="login">
+      <div class="login__pig">🐷</div>
+      <h1 class="login__title">語音記帳</h1>
+      <p class="login__hint" id="loginHint">輸入 email,我們寄一條登入連結給你</p>
+      <form id="loginForm" class="login__form">
+        <input id="email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email" required />
+        <button type="submit" class="btn btn--go" id="loginBtn">寄送登入連結</button>
+      </form>
+    </section>
 
     <!-- ── 麥克風 ── -->
-    <section class="stage" id="stage">
-      <p class="prompt" id="prompt">按住小圓圈，<br />跟我說一筆～</p>
-
+    <section class="stage hide" id="stage">
       <button id="mic" class="mic" aria-label="按住錄音">
         <span class="mic__blob"></span>
         <span class="mic__icon">
@@ -31,8 +36,7 @@
           </svg>
         </span>
       </button>
-
-      <div id="status" class="status">準備好囉 ✨</div>
+      <div id="status" class="status"></div>
     </section>
 
     <!-- ── 確認卡片 ── -->
