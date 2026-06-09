@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>語音記帳</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <h1>🎙️ 語音記帳</h1>
+    <p class="hint">按住按鈕說話,放開就自動記帳</p>
+
+    <button id="mic" class="mic" aria-label="按住錄音">
+      <span class="mic-icon">🎤</span>
+    </button>
+    <div id="status" class="status">準備就緒</div>
+
+    <form id="textForm" class="text-form">
+      <input id="textInput" type="text" placeholder="也可以直接打字,例如:午餐 120" autocomplete="off" />
+      <button type="submit">送出</button>
+    </form>
+
+    <ul id="log" class="log"></ul>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

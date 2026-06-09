@@ -1,0 +1,113 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --accent: #38bdf8;
+  --accent-rec: #f43f5e;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+}
+
+body {
+  font-family: -apple-system, "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.app {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+h1 { font-size: 1.6rem; }
+.hint { color: var(--muted); font-size: 0.9rem; }
+
+.mic {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 3rem;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 30px rgba(56, 189, 248, 0.35);
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+.mic:active { transform: scale(0.95); }
+.mic.recording {
+  background: var(--accent-rec);
+  box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6);
+  animation: pulse 1.2s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6); }
+  70% { box-shadow: 0 0 0 22px rgba(244, 63, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+}
+
+.status {
+  min-height: 1.4em;
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.text-form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.text-form input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: var(--card);
+  color: var(--text);
+  font-size: 1rem;
+}
+.text-form button {
+  padding: 0 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: #04293a;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.log {
+  list-style: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.log li {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--accent);
+}
+.log li.error { border-left-color: var(--accent-rec); }
+.log .row-main {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+.log .amount { color: var(--accent); }
+.log .meta { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
