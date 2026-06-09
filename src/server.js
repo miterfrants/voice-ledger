@@ -20,35 +20,37 @@ const upload = multer({
   limits: { fileSize: 25 * 1024 * 1024 },
 });
 
-// 共用流程:文字 → 解析 → 寫入試算表
-async function handleText(text) {
-  if (!text) throw new Error('沒有辨識到任何內容,請再說一次');
-  const data = await parseExpense(text);
-  await ensureHeaders();
-  await appendRow(data);
-  return { transcript: text, data };
-}
-
-// 語音記帳:上傳音檔 → Whisper → GPT 解析 → 寫入
+// 步驟一:語音 → 文字 → 解析欄位。⚠️ 這裡「不寫入」試算表,只回傳給前端確認
 app.post('/api/record', upload.single('audio'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: '沒有收到音檔' });
     const text = await transcribe(req.file.buffer, req.file.mimetype);
-    const result = await handleText(text);
-    res.json(result);
+    if (!text) return res.status(400).json({ error: '沒有辨識到內容,請再說一次' });
+    const data = await parseExpense(text);
+    res.json({ transcript: text, data });
   } catch (err) {
     console.error('[record]', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// 純文字記帳(方便測試或手動輸入)
-app.post('/api/text', async (req, res) => {
+// 步驟二:使用者按「確認」後才真正寫入 Google Sheet
+app.post('/api/confirm', async (req, res) => {
   try {
-    const result = await handleText((req.body?.text || '').trim());
-    res.json(result);
+    const d = req.body?.data || req.body || {};
+    if (!d.item && !d.amount) {
+      return res.status(400).json({ error: '資料不完整,無法記帳' });
+    }
+    const row = {
+      date: String(d.date || '').trim(),
+      item: String(d.item || '').trim(),
+      amount: Number(d.amount) || 0,
+    };
+    await ensureHeaders();
+    await appendRow(row);
+    res.json({ ok: true, data: row });
   } catch (err) {
-    console.error('[text]', err);
+    console.error('[confirm]', err);
     res.status(500).json({ error: err.message });
   }
 });

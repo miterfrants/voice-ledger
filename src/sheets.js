@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 
 const SHEET_NAME = process.env.SHEET_NAME || '記帳';
-export const HEADERS = ['日期', '項目', '金額', '分類', '備註'];
+export const HEADERS = ['日期', '項目', '金額'];
 
 let sheetsClient;
 
@@ -33,7 +33,7 @@ export async function ensureHeaders() {
 
   const { data } = await sheets.spreadsheets.values.get({
     spreadsheetId: id,
-    range: `${SHEET_NAME}!A1:E1`,
+    range: `${SHEET_NAME}!A1:C1`,
   });
 
   if (!data.values || data.values.length === 0) {
@@ -50,17 +50,17 @@ export async function ensureHeaders() {
 
 /**
  * 新增一筆記帳到試算表最後一列
- * @param {{date:string,item:string,amount:number,category:string,note:string}} row
+ * @param {{date:string,item:string,amount:number}} row
  */
 export async function appendRow(row) {
   const sheets = getClient();
   const id = spreadsheetId();
 
-  const values = [[row.date, row.item, row.amount, row.category, row.note]];
+  const values = [[row.date, row.item, row.amount]];
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: id,
-    range: `${SHEET_NAME}!A:E`,
+    range: `${SHEET_NAME}!A:C`,
     valueInputOption: 'USER_ENTERED',
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values },
